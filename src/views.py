@@ -2,6 +2,8 @@ import json
 import requests
 import datetime
 from func_get_data import read_excel_file
+import pandas as pd
+
 
 transaction = read_excel_file('../data/operations.xlsx')
 
@@ -38,14 +40,29 @@ def filtr_transction_by_date(data_dict: list[dict], date:str)->list[dict]:
             filtr_list_transaction.append(item)
     return filtr_list_transaction
 
-def aregate_transsction_card(data_dict: list[dict])->list[dict]:
+def agregate_transaction_card(data_dict: list[dict])->list[dict]:
     """агрегирует транзакции по карте, выводит суммы и размер кэшбека по каждой карте"""
+    df = pd.DataFrame(data_dict)
 
+                      # columns=['Дата операции', 'Дата платежа', 'Номер карты', 'Статус',
+                      #                                  'Сумма операции',  'Валюта операции', 'Сумма платежа',
+                      #                                  'Валюта платеж', 'Кэшбэк', 'Категория', 'MCC', 'Описание',
+                      #                                  'Бонусы (включая кэшбэк)', 'Округление на инвесткопилку',
+                      #                                  'Сумма операции с округлением'])
+    return df
+
+    # df = pd.DataFrame(list(dict_data.items()), columns=['Date', 'Value'])
+    # # Группировка данных по странам
+    # country_grouped = df.groupby('country')
+    #
+    # # Вычисление средней цены для каждой страны
+    # mean_price_by_country = country_grouped['price'].mean()
+    # print(mean_price_by_country)
 
 
 
 
 if __name__ == '__main__':
-    print(filtr_transction_by_date(transaction,'2021-12-25 19:06:39'))
+    print(agregate_transaction_card(transaction))
 
 
