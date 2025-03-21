@@ -1,8 +1,11 @@
 import json
 import requests
 import datetime
-from func_get_data import read_excel_file
 import pandas as pd
+
+from pandas.core.interchange.dataframe_protocol import DataFrame
+from func_get_data import read_excel_file
+
 
 
 transaction = read_excel_file('../data/operations.xlsx')
@@ -40,29 +43,39 @@ def filtr_transction_by_date(data_dict: list[dict], date:str)->list[dict]:
             filtr_list_transaction.append(item)
     return filtr_list_transaction
 
-def agregate_transaction_card(data_dict: list[dict])->list[dict]:
-    """агрегирует транзакции по карте, выводит суммы и размер кэшбека по каждой карте"""
+def filtr_operation_with_cashback(sum_operation:float)->float:
+    """фильтрует расходы по карте"""
+    if sum_operation < 0:
+        spent = sum_operation
+    else:
+        spent = 0
+    return spent
+
+
+def agregate_transaction_card(data_dict: list[dict])->DataFrame:
+    """агрегирует транзакции по карте, выводит сумм транзакций по каждой карте и размер кэшбека"""
     df = pd.DataFrame(data_dict)
+    df['расходы по карте'] = df.apply(lambda x: filtr_operation_with_cashback(x['Сумма операции']), axis=1)
+    df['cashback'] = abs(df['расходы по карте']/100*1)
+    card_grouped = df.groupby('Номер карты')
+    sum_by_card = card_grouped.agg({'расходы по карте': 'sum', 'cashback': 'sum', 'Кэшбэк': 'sum'})
+    return sum_by_card
 
-                      # columns=['Дата операции', 'Дата платежа', 'Номер карты', 'Статус',
-                      #                                  'Сумма операции',  'Валюта операции', 'Сумма платежа',
-                      #                                  'Валюта платеж', 'Кэшбэк', 'Категория', 'MCC', 'Описание',
-                      #                                  'Бонусы (включая кэшбэк)', 'Округление на инвесткопилку',
-                      #                                  'Сумма операции с округлением'])
-    return df
+def get_top_transaction(data_dict: list[dict])->DataFrame:
+    """выводит топ 5 транзакций по сумме"""
+    df = pd.DataFrame(data_dict)
+    df['транзакция'] = abs(df['Сумма операции'])
+    df_sorted = df.sort_values('транзакция', ascending=False, ignore_index=True)
+    top_five_trans = df_sorted.loc[[0,1,2,3,4]]
+    return top_five_trans
 
-    # df = pd.DataFrame(list(dict_data.items()), columns=['Date', 'Value'])
-    # # Группировка данных по странам
-    # country_grouped = df.groupby('country')
-    #
-    # # Вычисление средней цены для каждой страны
-    # mean_price_by_country = country_grouped['price'].mean()
-    # print(mean_price_by_country)
+
+
 
 
 
 
 if __name__ == '__main__':
-    print(agregate_transaction_card(transaction))
+    print(get_top_transaction(transaction))
 
 
