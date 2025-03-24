@@ -18,7 +18,7 @@ def get_users_settings(path: str) -> dict:
 
 
 if __name__ == "__main__":
-    print(get_users_settings('../user_settings.json'))
+    print(read_excel_file('../data/operations.xlsx'))
 
 
 

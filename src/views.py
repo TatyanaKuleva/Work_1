@@ -4,13 +4,14 @@ import os
 from dotenv import load_dotenv
 import datetime
 import pandas as pd
+from pandas.core.computation.common import result_type_many
 
 from pandas.core.interchange.dataframe_protocol import DataFrame
-from func_get_data import read_excel_file, get_users_settings
+from src.func_get_data import get_users_settings
 
 
 
-transaction = read_excel_file('../data/operations.xlsx')
+
 
 def get_start_of_period(date:str)->datetime:
     """определяет первое число месяца в котором находится заданная дата"""
@@ -60,8 +61,9 @@ def agregate_transaction_card(data_dict: list[dict])->DataFrame:
     df['расходы по карте'] = df.apply(lambda x: filtr_operation_with_cashback(x['Сумма операции']), axis=1)
     df['cashback'] = abs(df['расходы по карте']/100*1)
     card_grouped = df.groupby('Номер карты')
-    sum_by_card = card_grouped.agg({'расходы по карте': 'sum', 'cashback': 'sum', 'Кэшбэк': 'sum'})
-    return sum_by_card
+    sum_by_card = round(card_grouped.agg({'расходы по карте': 'sum', 'cashback': 'sum'}),2)
+    result = sum_by_card.reset_index().to_dict('records')
+    return result
 
 def get_top_transaction(data_dict: list[dict])->DataFrame:
     """выводит топ 5 транзакций по сумме"""
@@ -69,7 +71,9 @@ def get_top_transaction(data_dict: list[dict])->DataFrame:
     df['транзакция'] = abs(df['Сумма операции'])
     df_sorted = df.sort_values('транзакция', ascending=False, ignore_index=True)
     top_five_trans = df_sorted.loc[[0,1,2,3,4]]
-    return top_five_trans
+    extract_data = top_five_trans[['Дата операции', 'Сумма операции', 'Категория', 'Описание']]
+    result = extract_data.to_dict('records')
+    return result
 
 load_dotenv(".env")
 API_KEY_currency = os.getenv("API_KEY_currency")
@@ -77,7 +81,7 @@ API_KEY_stock = os.getenv("API_KEY_stock")
 
 def get_currency_stocks_rate()->dict:
     """функция запрашивает и возвращает актуальный курс валюты и акций устанволенных пользвателем"""
-    data_settings = get_users_settings('../user_settings.json')
+    data_settings = get_users_settings('user_settings.json')
     currency_1 = data_settings['user_currencies'][0]
     currency_2 = data_settings['user_currencies'][1]
     stock_1 = data_settings['user_stocks'][0]
@@ -148,8 +152,9 @@ def get_currency_stocks_rate()->dict:
     # url = 'https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=IBM&interval=5min&apikey=demo'
 
     # rub_amount = float(result["result"])
+    return result_1
 
-    return rate_currency_1, rate_currency_2, rate_stock_1, rate_stock_2, rate_stock_3, rate_stock_4, rate_stock_5
+    # return rate_currency_1, rate_currency_2, rate_stock_1, rate_stock_2, rate_stock_3, rate_stock_4, rate_stock_5
 
 
 
