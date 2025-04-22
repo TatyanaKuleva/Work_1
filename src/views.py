@@ -48,4 +48,4 @@ def main(current_date: str):
 
 
 if __name__ == '__main__':
-    print(main('2019-07-17 15:05:27'))
+    print(df)
