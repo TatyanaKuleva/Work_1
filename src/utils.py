@@ -187,6 +187,10 @@ def get_stocks_rate()->list:
 
     return rates_stock_list
 
+if __name__ == '__main__':
+    print(get_start_of_period('2019-07-17 15:05:27'))
+    print(type(get_start_of_period('2019-07-17 15:05:27')))
+
 
 
 
