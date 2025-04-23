@@ -53,7 +53,7 @@ def filtr_operation_with_cashback(sum_operation:float)->float:
     return spent
 
 
-def agregate_transaction_card(data_dict: list[dict])->DataFrame:
+def agregate_transaction_card(data_dict: list[dict])->list[dict]:
     """агрегирует транзакции по карте, выводит сумм транзакций по каждой карте и размер кэшбека"""
     df = pd.DataFrame(data_dict)
     df['расходы по карте'] = df.apply(lambda x: filtr_operation_with_cashback(x['Сумма операции']), axis=1)
@@ -108,8 +108,7 @@ def get_currency_rate()->list:
     rates_currency_list.append(rates_currency_dict_2)
 
 
-    return rates_currency_list
-
+    return  rates_currency_list
 
 
 def get_stocks_rate()->list:
@@ -188,8 +187,8 @@ def get_stocks_rate()->list:
     return rates_stock_list
 
 if __name__ == '__main__':
-    print(get_start_of_period('2019-07-17 15:05:27'))
-    print(type(get_start_of_period('2019-07-17 15:05:27')))
+    print(get_currency_rate())
+
 
 
 

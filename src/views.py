@@ -44,8 +44,8 @@ def main(current_date: str):
 
     json_result = json.dumps(result, indent=4, ensure_ascii=False)
 
-    return  json_result
+    return  filtr
 
 
 if __name__ == '__main__':
-    print(df)
+    print(main('2019-07-17 15:05:27'))
