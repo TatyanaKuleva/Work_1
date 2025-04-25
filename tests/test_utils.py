@@ -30,17 +30,43 @@ def test_agregate_transaction_card(get_list_dict_by_card_trans, result_list_dict
 def test_get_top_transaction(get_list_dict_by_top_five_trans, result_list_dict_by_top_five_trans):
     assert get_top_transaction(get_list_dict_by_top_five_trans) == result_list_dict_by_top_five_trans
 
-# @patch('open_get_user_settings')
-def test_get_currency_rate():
-    mock_response = Mock()
-    mock_response.json.return_value = {"result": 83.35}
-    mock_user_settings = Mock()
-    # mock_user_settings = {"user_currencies": ["USD", "EUR"]}
-    mock_user_settings.return_value = {"user_currencies": ["USD", "EUR"]}
+# @patch('src.func_get_data.get_users_settings')
+# @patch('requests.get'
 
-    with patch('requests.get', return_value=mock_response) as mock_get:
-        result = get_currency_rate()
-        assert result == [{'currency': 'USD', 'rate': 83.35}, {'currency': 'EUR', 'rate': 83.35}  ]
+@patch('src.func_get_data.get_users_settings')
+@patch('requests.get')
+def test_get_currency_rate(mock_1, mock_2):
+    # mock_response = Mock()
+    mock_2.json.return_value = {"result": 80.00}
+    mock_1.return_value = {"user_currencies": ["USD", "EUR"]}
+
+    # with patch('requests.get', return_value=mock_response) as mock_get:
+
+        # result = get_currency_rate()
+        # assert result == [{'currency': 'USD', 'rate': 80.00}, {'currency': 'EUR', 'rate': 80.00}]
+        # # mock_get.assert_called_once_with("1.0", "USD")
+
+    # mocked_get_user_curr.return_value = {"user_currencies": ["USD", "EUR"]}
+    # mock_get_1.return_value = {"result": '80.00'}
+    # mock_get_2.return_value = {"result": '90.00'}
+    #
+    # load_dotenv(".env")
+    # API_KEY_currency = os.getenv("API_KEY_currency")
+    #
+    # # with patch('requests.get', 'requests.get') as mock_get_1, mock_get_2:
+    # #     mock_get_1.return_value.json.return_value = {"result": '80.00'}
+    # #     mock_get_2.return_value.json.return_value = {"result": '90.00'}
+    # #     assert get_currency_rate() == [{'currency': 'USD', 'rate': 80.00}, {'currency': 'EUR', 'rate': 90.00}]
+    # # mock_user_settings = Mock()
+    # # mock_user_settings = {"user_currencies": ["USD", "EUR"]}
+    #
+    result = get_currency_rate()
+    assert result == [{'currency': 'USD', 'rate': 80.00}, {'currency': 'EUR', 'rate': 90.00}]
+    # mock_user_settings.return_value = {"user_currencies": ["USD", "EUR"]}
+
+    # with patch('requests.get', return_value=mock_response) as mock_get:
+    #     result = get_currency_rate()
+    #     assert result == [{'currency': 'USD', 'rate': 83.35}, {'currency': 'EUR', 'rate': 83.35}  ]
         # mock_get.assert_called_once_with()
 
 # @patch('pandas.read_csv')
