@@ -44,8 +44,19 @@ def main(current_date: str):
 
     json_result = json.dumps(result, indent=4, ensure_ascii=False)
 
-    return  filtr
+    return  json_result
 
+def event(date:str, data_range='M'):
+    df = read_excel_file('../data/operations.xlsx')
+    result = dict()
+
+    start = get_start_of_period(date)
+
+    filtr = filtr_transction_by_date(df, date)
+
+    json_res = json.dumps(filtr, indent=4, ensure_ascii=False)
+
+    return json_res
 
 if __name__ == '__main__':
-    print(main('2019-07-17 15:05:27'))
+    print(event('2019-07-17 15:05:27', 'W'))
