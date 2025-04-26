@@ -2,6 +2,8 @@ import json
 import time
 import requests
 import os
+
+from dateutil.rrule import weekday
 from dotenv import load_dotenv
 import datetime
 import pandas as pd
@@ -11,10 +13,21 @@ from pandas.core.interchange.dataframe_protocol import DataFrame
 from src.func_get_data import get_users_settings
 
 
-def get_start_of_period(date:str)->datetime:
+def get_start_of_period(date:str, data_range='M')->datetime:
     """определяет первое число месяца в котором находится заданная дата"""
     date_obj = datetime.datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
-    start_period = date_obj.replace(day=1, hour=0, minute=0, second=0)
+    if data_range == 'M':
+        start_period = date_obj.replace(day=1, hour=0, minute=0, second=0)
+    elif data_range == 'W':
+        day_week = date_obj.isoweekday()
+        week_period = 1 - day_week
+        new_start_period = date_obj + datetime.timedelta(days=week_period)
+        start_period = new_start_period.replace(hour=0, minute=0, second=0)
+    elif data_range == 'Y':
+        start_period = date_obj.replace(day=1, month=1, hour=0, minute=0, second=0)
+    elif data_range == 'ALL':
+        start_period = date_obj.replace(year=1, day=1, month=1, hour=0, minute=0, second=0)
+
     return start_period
 
 def greeting_user(date:str)->str:
@@ -35,7 +48,7 @@ def greeting_user(date:str)->str:
 
 def filtr_transction_by_date(data_dict: list[dict], date:str)->list[dict]:
     """фильтрует транзакции совершенные в период с начала месяца до заданной даты"""
-    start_date = get_start_of_period(date)
+    start_date = get_start_of_period()
     end_date = datetime.datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
     filtr_list_transaction = []
     for item in data_dict:
@@ -80,33 +93,23 @@ def get_currency_rate()->list:
     API_KEY_currency = os.getenv("API_KEY_currency")
 
     data_settings = get_users_settings('../user_settings.json')
-    currency_1 = data_settings['user_currencies'][0]
-    currency_2 = data_settings['user_currencies'][1]
+    user_curencies = data_settings['user_currencies']
 
     rates_currency_list = []
-    rates_currency_dict_1 = {}
-    rates_currency_dict_2 = {}
+
+    for currency in user_curencies:
+        rates_currency_dict = {}
 
 
-    url_currency_1 = f"https://api.currencylayer.com/convert?access_key={API_KEY_currency}&from={currency_1}&to=RUB&amount=1"
-    response_1= requests.get(url_currency_1)
-    result_1 = response_1.json()
-    rate_currency_1 = round(float(result_1["result"]),2)
-    rates_currency_dict_1['currency'] = currency_1
-    rates_currency_dict_1['rate'] =  rate_currency_1
-    rates_currency_list.append(rates_currency_dict_1)
+        url_currency = f"https://api.currencylayer.com/convert?access_key={API_KEY_currency}&from={currency}&to=RUB&amount=1"
+        response= requests.get(url_currency)
+        result = response.json()
+        rate_currency = round(float(result["result"]),2)
+        rates_currency_dict['currency'] = currency
+        rates_currency_dict['rate'] =  rate_currency
+        rates_currency_list.append(rates_currency_dict)
 
-
-    time.sleep(15)
-
-    url_currency_2 = f"https://api.currencylayer.com/convert?access_key={API_KEY_currency}&from={currency_2}&to=RUB&amount=1"
-    response_2 = requests.get(url_currency_2)
-    result_2 = response_2.json()
-    rate_currency_2 = round(float(result_2["result"]), 2)
-    rates_currency_dict_2['currency'] = currency_2
-    rates_currency_dict_2['rate'] = rate_currency_2
-    rates_currency_list.append(rates_currency_dict_2)
-
+        time.sleep(15)
 
     return  rates_currency_list
 
@@ -117,77 +120,40 @@ def get_stocks_rate()->list:
     API_KEY_stock = os.getenv("API_KEY_stock")
 
     data_settings = get_users_settings('../user_settings.json')
-    stock_1 = data_settings['user_stocks'][0]
-    stock_2 = data_settings['user_stocks'][1]
-    stock_3 = data_settings['user_stocks'][2]
-    stock_4 = data_settings['user_stocks'][3]
-    stock_5 = data_settings['user_stocks'][4]
+    user_stock = data_settings['user_stocks']
 
     rates_stock_list = []
-    rates_stock_dict_1 = {}
-    rates_stock_dict_2 = {}
-    rates_stock_dict_3 = {}
-    rates_stock_dict_4 = {}
-    rates_stock_dict_5 = {}
 
+    for stock in user_stock:
+        rates_stock_dict = {}
 
-    url_stock_1 = f"https://api.marketstack.com/v1/eod?access_key={API_KEY_stock}"
-    querystring = {"symbols": {stock_1}}
-    response_stock_1 = requests.get(url_stock_1, params=querystring)
-    result_stock_1 = response_stock_1.json()
-    rate_stock_1 = round(float(result_stock_1["data"][0]["close"]), 2)
-    rates_stock_dict_1['stock'] = stock_1
-    rates_stock_dict_1['price'] = rate_stock_1
-    rates_stock_list.append(rates_stock_dict_1)
+        url_stock = f"https://api.marketstack.com/v1/eod?access_key={API_KEY_stock}"
+        querystring = {"symbols": {stock}}
+        response_stock = requests.get(url_stock, params=querystring)
+        result_stock = response_stock.json()
+        rate_stock = round(float(result_stock["data"][0]["close"]), 2)
+        rates_stock_dict['stock'] = stock
+        rates_stock_dict['price'] = rate_stock
+        rates_stock_list.append(rates_stock_dict)
 
-    time.sleep(5)
-
-    url_stock_2 = f"https://api.marketstack.com/v1/eod?access_key={API_KEY_stock}"
-    querystring = {"symbols": {stock_2}}
-    response_stock_2 = requests.get(url_stock_2, params=querystring)
-    result_stock_2 = response_stock_2.json()
-    rate_stock_2 = round(float(result_stock_2["data"][0]["close"]), 2)
-    rates_stock_dict_2['stock'] = stock_2
-    rates_stock_dict_2['price'] = rate_stock_2
-    rates_stock_list.append(rates_stock_dict_2)
-
-    time.sleep(5)
-
-    url_stock_3 = f"https://api.marketstack.com/v1/eod?access_key={API_KEY_stock}"
-    querystring = {"symbols": {stock_3}}
-    response_stock_3 = requests.get(url_stock_3, params=querystring)
-    result_stock_3 = response_stock_3.json()
-    rate_stock_3 = round(float(result_stock_3["data"][0]["close"]), 2)
-    rates_stock_dict_3['stock'] = stock_3
-    rates_stock_dict_3['price'] = rate_stock_3
-    rates_stock_list.append(rates_stock_dict_3)
-
-    time.sleep(5)
-
-    url_stock_4 = f"https://api.marketstack.com/v1/eod?access_key={API_KEY_stock}"
-    querystring = {"symbols": {stock_4}}
-    response_stock_4 = requests.get(url_stock_4, params=querystring)
-    result_stock_4 = response_stock_4.json()
-    rate_stock_4 = round(float(result_stock_4["data"][0]["close"]), 2)
-    rates_stock_dict_4['stock'] = stock_4
-    rates_stock_dict_4['price'] = rate_stock_4
-    rates_stock_list.append(rates_stock_dict_4)
-
-    time.sleep(5)
-
-    url_stock_5 = f"https://api.marketstack.com/v1/eod?access_key={API_KEY_stock}"
-    querystring = {"symbols": {stock_5}}
-    response_stock_5 = requests.get(url_stock_5, params=querystring)
-    result_stock_5 = response_stock_5.json()
-    rate_stock_5 = round(float(result_stock_5["data"][0]["close"]), 2)
-    rates_stock_dict_5['stock'] = stock_5
-    rates_stock_dict_5['price'] = rate_stock_5
-    rates_stock_list.append(rates_stock_dict_5)
+        time.sleep(5)
 
     return rates_stock_list
 
+
+def filtr_transction_by_period(data_dict: list[dict], date:str, data_range='M')->list[dict]:
+    """фильтрует транзакции совершенные в период с начала месяца до заданной даты"""
+    start_date = get_start_of_period(date)
+    end_date = datetime.datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
+    filtr_list_transaction = []
+    for item in data_dict:
+        format_date = datetime.datetime.strptime(item['Дата операции'], "%d.%m.%Y %H:%M:%S")
+        if start_date <= format_date <= end_date:
+            filtr_list_transaction.append(item)
+    return filtr_list_transaction
+
 if __name__ == '__main__':
-    print(get_currency_rate())
+    print(get_start_of_period('2019-07-17 15:05:27', 'W'))
 
 
 
