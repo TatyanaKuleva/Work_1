@@ -14,7 +14,7 @@ from src.func_get_data import get_users_settings
 
 
 def get_start_of_period(date:str, data_range='M')->datetime:
-    """определяет первое число месяца в котором находится заданная дата"""
+    """определяет первое число для определяения диапазона данных для заданной даты"""
     date_obj = datetime.datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
     if data_range == 'M':
         start_period = date_obj.replace(day=1, hour=0, minute=0, second=0)
@@ -48,7 +48,7 @@ def greeting_user(date:str)->str:
 
 def filtr_transction_by_date(data_dict: list[dict], date:str)->list[dict]:
     """фильтрует транзакции совершенные в период с начала месяца до заданной даты"""
-    start_date = get_start_of_period()
+    start_date = get_start_of_period(date, data_range='M')
     end_date = datetime.datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
     filtr_list_transaction = []
     for item in data_dict:
@@ -56,6 +56,17 @@ def filtr_transction_by_date(data_dict: list[dict], date:str)->list[dict]:
         if start_date <= format_date <= end_date:
             filtr_list_transaction.append(item)
     return filtr_list_transaction
+
+def filtr_transction_by_period(data_dict: list[dict], date_start:datetime, date_end:str)->list[dict]:
+    """фильтрует транзакции совершенные в p заданный период"""
+    date_end = datetime.datetime.strptime(date_end, "%Y-%m-%d %H:%M:%S")
+    filtr_list_transaction = []
+    for item in data_dict:
+        format_date = datetime.datetime.strptime(item['Дата операции'], "%d.%m.%Y %H:%M:%S")
+        if date_start<= format_date <= date_end:
+            filtr_list_transaction.append(item)
+    return filtr_list_transaction
+
 
 def filtr_operation_with_cashback(sum_operation:float)->float:
     """фильтрует расходы по карте"""
@@ -85,6 +96,26 @@ def get_top_transaction(data_dict: list[dict])->DataFrame:
     extract_data = top_five_trans[['Дата операции', 'Сумма операции', 'Категория', 'Описание']]
     result = extract_data.to_dict('records')
     return result
+
+def sort_only_expenses(data_dict: list[dict])->list[dict]:
+    df = pd.DataFrame(data_dict)
+    df_only_expenses = df[df['Сумма платежа'] < 0]
+    return df_only_expenses
+
+def get_sum_by_column(data_df, name_column='Сумма платежа'):
+    data_df.rename(columns={name_column: "sum_by_column"}, inplace=True)
+    return round(data_df.sum_by_column.sum(),2)
+
+def group_by_category_for_main(data_df, name_part='main'):
+    data_df.rename(columns={'Категория': "category"}, inplace=True)
+    df_sum_by_category = data_df.groupby("category").sum()
+    sort_for_main = df_sum_by_category.sort_values(by='Сумма платежа', ascending=True, ignore_index=True)
+    top_seven_category = sort_for_main.loc[[0,1,2,3,4,5,6]]
+    return top_seven_category[top_seven_category['Сумма платежа', 'category']]
+
+
+
+
 
 
 def get_currency_rate()->list:
@@ -141,16 +172,7 @@ def get_stocks_rate()->list:
     return rates_stock_list
 
 
-def filtr_transction_by_period(data_dict: list[dict], date:str, data_range='M')->list[dict]:
-    """фильтрует транзакции совершенные в период с начала месяца до заданной даты"""
-    start_date = get_start_of_period(date)
-    end_date = datetime.datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
-    filtr_list_transaction = []
-    for item in data_dict:
-        format_date = datetime.datetime.strptime(item['Дата операции'], "%d.%m.%Y %H:%M:%S")
-        if start_date <= format_date <= end_date:
-            filtr_list_transaction.append(item)
-    return filtr_list_transaction
+
 
 if __name__ == '__main__':
     print(get_start_of_period('2019-07-17 15:05:27', 'W'))

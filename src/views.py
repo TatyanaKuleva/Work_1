@@ -2,7 +2,8 @@ import json
 
 from src.func_get_data import read_excel_file, get_users_settings
 from src.utils import (get_start_of_period, greeting_user, filtr_transction_by_date, filtr_operation_with_cashback,
-                       agregate_transaction_card, get_top_transaction, get_currency_rate, get_stocks_rate)
+                       agregate_transaction_card, get_top_transaction, get_currency_rate, get_stocks_rate,
+                       filtr_transction_by_period, sort_only_expenses, get_sum_by_column, group_by_category_for_main)
 
 
 def main(current_date: str):
@@ -50,13 +51,21 @@ def event(date:str, data_range='M'):
     df = read_excel_file('../data/operations.xlsx')
     result = dict()
 
-    start = get_start_of_period(date)
+    start = get_start_of_period(date,data_range)
 
-    filtr = filtr_transction_by_date(df, date)
+    filtr_transaction = filtr_transction_by_period(df, start, date)
 
-    json_res = json.dumps(filtr, indent=4, ensure_ascii=False)
+    only_exp = sort_only_expenses(filtr_transaction)
 
-    return json_res
+    # result = get_sum_by_column(only_exp)
+
+    result = group_by_category_for_main(only_exp)
+
+    # result = extract_data.to_dict('records')
+
+    # json_res = json.dumps(result, indent=4, ensure_ascii=False)
+
+    return result
 
 if __name__ == '__main__':
-    print(event('2019-07-17 15:05:27', 'W'))
+    print(event('2019-07-17 15:05:27', 'ALL'))
