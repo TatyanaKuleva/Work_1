@@ -69,7 +69,7 @@ def filtr_transction_by_period(data_dict: list[dict], date_start:datetime, date_
 
 
 def filtr_operation_with_cashback(sum_operation:float)->float:
-    """фильтрует расходы по карте"""
+    """фильтрует расходы по карте для расчета кэшбека"""
     if sum_operation < 0:
         spent = sum_operation
     else:
@@ -97,21 +97,51 @@ def get_top_transaction(data_dict: list[dict])->DataFrame:
     result = extract_data.to_dict('records')
     return result
 
-def sort_only_expenses(data_dict: list[dict])->list[dict]:
+def filtr_only_expenses(data_dict: list[dict])->list[dict]:
+    """сортирует расходы по карте от поступлений"""
     df = pd.DataFrame(data_dict)
     df_only_expenses = df[df['Сумма платежа'] < 0]
     return df_only_expenses
 
 def get_sum_by_column(data_df, name_column='Сумма платежа'):
+    """расситывает общую сумму по заданному столбцу"""
     data_df.rename(columns={name_column: "sum_by_column"}, inplace=True)
     return round(data_df.sum_by_column.sum(),2)
 
-def group_by_category_for_main(data_df, name_part='main'):
+def group_sort_by_category(data_df):
+    """группирует расходы по катергориям и сортирует по сумме расходов"""
+    data_df.rename(columns={'Категория': "category", 'Сумма платежа': "sum_pay" }, inplace=True)
+    df_sum_by_category = data_df.groupby("category", as_index=False).sum()
+    sort_for_main = df_sum_by_category.sort_values(by='sum_pay', ascending=True, ignore_index=True)
+    return sort_for_main
+
+def extract_main_category(data_df, name_category_1, name_category_2):
+    main_category = data_df.loc[~data_df.category.isin([name_category_1, name_category_2])]
+    main_category = main_category.reset_index()
+    return main_category
+
+def top_seven_category_main(data_df):
+    top_seven_category = data_df.loc[[0, 1, 2, 3, 4, 5, 6], ['category', 'sum_pay']]
+    return top_seven_category
+
+def other_category_main_sum(data_df):
+    other_category = data_df.loc[7: , ['category', 'sum_pay']]
+    return other_category
+
+def extract_transfer_and_cash_category(data_df, name_category_1, name_category_2):
+    transfer_and_cash = data_df.loc[data_df.category.isin([name_category_1, name_category_2])]
+    transfer_and_cash= transfer_and_cash.reset_index()
+    return transfer_and_cash
+
+
+def group_by_category_for_other(data_df):
+    """группиреут расходы по катергориям и сортирует по сумме расходов, формирует список по остальным категориям"""
     data_df.rename(columns={'Категория': "category"}, inplace=True)
-    df_sum_by_category = data_df.groupby("category").sum()
-    sort_for_main = df_sum_by_category.sort_values(by='Сумма платежа', ascending=True, ignore_index=True)
-    top_seven_category = sort_for_main.loc[[0,1,2,3,4,5,6]]
-    return top_seven_category[top_seven_category['Сумма платежа', 'category']]
+    df_sum_by_category = data_df.groupby("category", as_index=False).sum()
+    sort_for_other = df_sum_by_category.sort_values(by='Сумма платежа', ascending=True, ignore_index=True)
+    other_category = sort_for_other.loc[7: , ['category', 'Сумма платежа']]
+
+    return other_category
 
 
 
