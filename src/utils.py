@@ -103,45 +103,57 @@ def filtr_only_expenses(data_dict: list[dict])->list[dict]:
     df_only_expenses = df[df['Сумма платежа'] < 0]
     return df_only_expenses
 
+
 def get_sum_by_column(data_df, name_column='Сумма платежа'):
     """расситывает общую сумму по заданному столбцу"""
     data_df.rename(columns={name_column: "sum_by_column"}, inplace=True)
-    return round(data_df.sum_by_column.sum(),2)
+    return abs(round(data_df.sum_by_column.sum(),0))
 
 def group_sort_by_category(data_df):
     """группирует расходы по катергориям и сортирует по сумме расходов"""
-    data_df.rename(columns={'Категория': "category", 'Сумма платежа': "sum_pay" }, inplace=True)
-    df_sum_by_category = data_df.groupby("category", as_index=False).sum()
-    sort_for_main = df_sum_by_category.sort_values(by='sum_pay', ascending=True, ignore_index=True)
+    data_df.rename(columns={'Категория': "category", 'sum_by_column': "amount" }, inplace=True)
+    df_sum_by_category = data_df.groupby("category", as_index=False).agg({"amount": 'sum'})
+    sort_for_main = df_sum_by_category.sort_values(by='amount', ascending=True, ignore_index=True)
     return sort_for_main
 
 def extract_main_category(data_df, name_category_1, name_category_2):
+    """формирует список категорий относящихся к main,исключая категории заданные категории"""
     main_category = data_df.loc[~data_df.category.isin([name_category_1, name_category_2])]
     main_category = main_category.reset_index()
     return main_category
 
-def top_seven_category_main(data_df):
-    top_seven_category = data_df.loc[[0, 1, 2, 3, 4, 5, 6], ['category', 'sum_pay']]
-    return top_seven_category
 
-def other_category_main_sum(data_df):
-    other_category = data_df.loc[7: , ['category', 'sum_pay']]
-    return other_category
+def top_seven_category_main(data_df):
+    """выделяет 7 категорий по сумме платежа, формирует словарь с данными"""
+    top_seven_category = data_df.head(7)
+    other_category = data_df.loc[7:, ['category', 'amount']].agg({'amount': 'sum'})
+    res_dict = []
+    for index, row in top_seven_category.iterrows():
+        categ_7 = dict()
+        categ_7["category"] = row["category"]
+        categ_7["amount"] = abs(round(row['amount'],0))
+        res_dict.append(categ_7)
+
+    other = dict()
+    other["category"] = "Остальное"
+    other["amount"] = abs(round(other_category['amount'], 0))
+    res_dict.append(other)
+
+    return res_dict
+
 
 def extract_transfer_and_cash_category(data_df, name_category_1, name_category_2):
     transfer_and_cash = data_df.loc[data_df.category.isin([name_category_1, name_category_2])]
     transfer_and_cash= transfer_and_cash.reset_index()
-    return transfer_and_cash
+    res_dict = []
+    for index, row in transfer_and_cash.iterrows():
+        trans_cash = dict()
+        trans_cash["category"] = row["category"]
+        trans_cash["amount"] = abs(round(row['amount'], 0))
+        res_dict.append(trans_cash)
+    return res_dict
 
 
-def group_by_category_for_other(data_df):
-    """группиреут расходы по катергориям и сортирует по сумме расходов, формирует список по остальным категориям"""
-    data_df.rename(columns={'Категория': "category"}, inplace=True)
-    df_sum_by_category = data_df.groupby("category", as_index=False).sum()
-    sort_for_other = df_sum_by_category.sort_values(by='Сумма платежа', ascending=True, ignore_index=True)
-    other_category = sort_for_other.loc[7: , ['category', 'Сумма платежа']]
-
-    return other_category
 
 
 
