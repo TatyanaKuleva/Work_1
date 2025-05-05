@@ -4,7 +4,8 @@ from src.func_get_data import read_excel_file, get_users_settings
 from src.utils import (get_start_of_period, greeting_user, filtr_transction_by_date, filtr_operation_with_cashback,
                        agregate_transaction_card, get_top_transaction, get_currency_rate, get_stocks_rate,
                        filtr_transction_by_period, filtr_only_expenses, get_sum_by_column, group_sort_by_category,
-                       extract_main_category, top_seven_category_main,extract_transfer_and_cash_category)
+                       extract_main_category, top_seven_category_main, extract_transfer_and_cash_category,
+                       filtr_only_income, group_sort_by_category_income, category_main_income)
 
 
 def main(current_date: str):
@@ -52,6 +53,7 @@ def event(date:str, data_range='M'):
     df = read_excel_file('../data/operations.xlsx')
     result_json = dict()
     expencies = dict()
+    income = dict()
 
     start = get_start_of_period(date,data_range)
 
@@ -74,26 +76,27 @@ def event(date:str, data_range='M'):
 
     result_json["expenses"] = expencies
 
+    only_income = filtr_only_income(filtr_transaction)
 
+    income["total_amount"] = get_sum_by_column(only_income)
 
+    main_categories_income = category_main_income(group_sort_by_category_income(only_income))
 
+    income["main"] = main_categories_income
 
+    result_json["income"] = income
 
-    # result_2 = extract_main_category(result_1, )
+    data_rate_by_users_curr = get_currency_rate()
+    result_json["currency_rates"] = data_rate_by_users_curr
 
-    # result = top_seven_category_main(result_2)
-
-    # result_4 = other_category_main_sum(result_2)
-
-    # result_5 = get_sum_by_column(result_4, 'amount')
-
-    # result_3= extract_transfer_and_cash_category(result_1, 'Переводы', 'Наличные')
-
-    # result = result.to_dict('records')
+    data_rate_by_users_stock = get_stocks_rate()
+    result_json["stock_prices"] = data_rate_by_users_stock
 
     json_res = json.dumps(result_json, indent=4, ensure_ascii=False)
 
     return json_res
 
+    # return only_income
+
 if __name__ == '__main__':
-    print(event('2019-07-17 15:05:27', 'Y'))
+    print(event('2019-07-17 15:05:27', 'M'))

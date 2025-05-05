@@ -103,6 +103,11 @@ def filtr_only_expenses(data_dict: list[dict])->list[dict]:
     df_only_expenses = df[df['Сумма платежа'] < 0]
     return df_only_expenses
 
+def filtr_only_income(data_dict):
+    """выделяет поступления от расходов"""
+    df = pd.DataFrame(data_dict)
+    df_only_income = df[df['Сумма платежа'] > 0]
+    return df_only_income.reset_index()
 
 def get_sum_by_column(data_df, name_column='Сумма платежа'):
     """расситывает общую сумму по заданному столбцу"""
@@ -113,7 +118,14 @@ def group_sort_by_category(data_df):
     """группирует расходы по катергориям и сортирует по сумме расходов"""
     data_df.rename(columns={'Категория': "category", 'sum_by_column': "amount" }, inplace=True)
     df_sum_by_category = data_df.groupby("category", as_index=False).agg({"amount": 'sum'})
-    sort_for_main = df_sum_by_category.sort_values(by='amount', ascending=True, ignore_index=True)
+    sort_for_main = df_sum_by_category.sort_values(by='amount', ascending= True, ignore_index=True)
+    return sort_for_main
+
+def group_sort_by_category_income(data_df):
+    """группирует расходы по катергориям и сортирует по сумме расходов"""
+    data_df.rename(columns={'Категория': "category", 'sum_by_column': "amount" }, inplace=True)
+    df_sum_by_category = data_df.groupby("category", as_index=False).agg({"amount": 'sum'})
+    sort_for_main = df_sum_by_category.sort_values(by='amount', ascending= False, ignore_index=True)
     return sort_for_main
 
 def extract_main_category(data_df, name_category_1, name_category_2):
@@ -141,6 +153,16 @@ def top_seven_category_main(data_df):
 
     return res_dict
 
+def category_main_income(data_df):
+    """формирует словарь с данными о поступлениях"""
+    res_dict = []
+    for index, row in data_df.iterrows():
+        income_main = dict()
+        income_main["category"] = row["category"]
+        income_main["amount"] = round(row['amount'],0)
+        res_dict.append(income_main)
+    return res_dict
+
 
 def extract_transfer_and_cash_category(data_df, name_category_1, name_category_2):
     transfer_and_cash = data_df.loc[data_df.category.isin([name_category_1, name_category_2])]
@@ -152,12 +174,6 @@ def extract_transfer_and_cash_category(data_df, name_category_1, name_category_2
         trans_cash["amount"] = abs(round(row['amount'], 0))
         res_dict.append(trans_cash)
     return res_dict
-
-
-
-
-
-
 
 
 def get_currency_rate()->list:
@@ -217,7 +233,14 @@ def get_stocks_rate()->list:
 
 
 if __name__ == '__main__':
-    print(get_start_of_period('2019-07-17 15:05:27', 'W'))
+    print(extract_transfer_and_cash_category(pd.DataFrame({'Валюта операции': ['RUB', 'RUB', 'RUB', 'RUB', 'RUB', 'RUB'],
+                         'Дата операции': ['30.12.2021 16:44:00', '29.12.2021 12:22:00',
+                                           '28.12.2021 10:02:00', '30.12.2021 16:44:00',
+                                           '29.12.2021 12:22:00', '28.12.2021 10:02:00'],
+                          'category': ['Аптеки', 'Аптеки', 'Супермаркеты',
+                                        'Супермаркеты', 'Пополнения', 'Дом и ремонт'],
+                         'amount': [3000.0, 200.0, 10000.0,
+                                            3000.0, 200.0, 10000.0]}), 'Аптеки', 'Пополнения'))
 
 
 
