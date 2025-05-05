@@ -165,6 +165,7 @@ def category_main_income(data_df):
 
 
 def extract_transfer_and_cash_category(data_df, name_category_1, name_category_2):
+    """фильтрует категории по заданному названию и формирует словарь с данными"""
     transfer_and_cash = data_df.loc[data_df.category.isin([name_category_1, name_category_2])]
     transfer_and_cash= transfer_and_cash.reset_index()
     res_dict = []
