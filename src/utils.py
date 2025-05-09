@@ -58,7 +58,7 @@ def filtr_transction_by_date(data_dict: list[dict], date:str)->list[dict]:
     return filtr_list_transaction
 
 def filtr_transction_by_period(data_dict: list[dict], date_start:datetime, date_end:str)->list[dict]:
-    """фильтрует транзакции совершенные в p заданный период"""
+    """фильтрует транзакции совершенные в  заданный период"""
     date_end = datetime.datetime.strptime(date_end, "%Y-%m-%d %H:%M:%S")
     filtr_list_transaction = []
     for item in data_dict:
