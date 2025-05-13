@@ -99,4 +99,4 @@ def event(date:str, data_range='M'):
     # return only_income
 
 if __name__ == '__main__':
-    print(event('2019-07-17 15:05:27', 'M'))
+    print(event('2019-07-15 20:00:31', 'W'))
