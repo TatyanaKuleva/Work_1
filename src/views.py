@@ -9,6 +9,7 @@ from src.utils import (get_start_of_period, greeting_user, filtr_transction_by_d
 
 
 def main(current_date: str):
+    """главная функция принимает строку с датой и временем в формате возвращает JSON-ответ"""
     df = read_excel_file('../data/operations.xlsx')
     result = dict()
 
@@ -50,6 +51,8 @@ def main(current_date: str):
     return  json_result
 
 def event(date:str, data_range='M'):
+    """главная функция, принимающую на вход строку с датой и второй необязательный параметр — диапазон данных.
+    возвращает JSON файл"""
     df = read_excel_file('../data/operations.xlsx')
     result_json = dict()
     expencies = dict()
